@@ -211,6 +211,99 @@ long atol(const char *s)
 	return val;
 }
 
+unsigned long power(unsigned char base, unsigned char exp) { // we need some limits
+	double exp_tmp, result;
+
+	result = 1;
+
+	exp_tmp = exp;
+	while (exp_tmp != 0) {
+		result *= base;
+		exp_tmp -= 1;
+	}
+
+	return result;
+}
+
+unsigned long strtoul(const char *str, char **endptr, int base)
+{
+	unsigned long result;
+	int base_guessed, off, end;
+	bool neg;
+
+	if (str[0] == '+') {
+		off = 1;
+	} else if (str[0] == '-') {
+		off = 1;
+		neg = true;
+	} else {
+		off = 0;
+	}
+
+	// Guessing base
+	// TODO: Add support for detecting more bases
+	if (base == 0) {
+		if (str[off] == '0' && (str[off + 1] == 'x' || str[off + 1] == 'X')) { // assuming hexadecimal
+			base_guessed = 16;
+			off += 2;
+		} else if (str[off] == '0' && (str[off + 1] == 'b' || str[off + 1] == 'B')) { // assuming binary
+			base_guessed = 2;
+			off += 2;
+		} else if (str[off] == '0') { // assuming octal
+			base_guessed = 8;
+			off += 1;
+		} else { // assuming decimal, fix later
+			base_guessed = 10;
+		}
+	} else {
+		base_guessed = base;
+	}
+
+	// Basic error checking
+	for (end = off; end < strlen(str); end++) {
+		if (base_guessed > 10) {
+			if (str[end] < '0' || ((str[end] > '9') && (str[end] < 'A')) ||
+			    ((str[end] > (64 + base_guessed - 10)) && (str[end] < 'a')) || str[end] > (96 + base_guessed - 10))
+				break;
+		} else {
+			if (str[end] < '0' || str[end] > 47 + base_guessed)
+				break;
+		}
+	}
+
+
+	end -= off;
+
+	// actual thing now
+	for (int i = 0; i < end; i++) {
+		if (base_guessed > 10) {
+			if (str[i + off] >= '0' && str[i + off] <= '9') {
+				result += (str[i + off] - 48) * power(base_guessed, (end - i - 1));
+			} else if (str[i + off] >= 'A' && str[i + off] <= (64 + base_guessed - 10)) {
+				result += ((str[i + off] - 65) + 10) * power(base_guessed, (end - i - 1));
+			} else if (str[i + off] >= 'a' && str[i + off] <= (96 + base_guessed - 10)) {
+				result += ((str[i + off] - 97) + 10) * power(base_guessed, (end - i - 1));
+			} else {
+				error("wtf shouldnt get here\n");
+			}
+		} else {
+			if (str[i + off] >= '0' && str[i + off] <= 47 + base_guessed) {
+				result += (str[i + off] - 48) * power(base_guessed, (end - i - 1));
+			} else {
+				error("wtf shouldn't get here\n");
+			}
+		}
+	}
+
+	if (endptr != NULL)
+		*endptr = str + end + off;
+
+	if (neg)
+		result = -result;
+
+	return result;
+}
+
 void writel(unsigned int value, void* address)
 {
 	volatile unsigned int* ptr = (volatile unsigned int*)address;

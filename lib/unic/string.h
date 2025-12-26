@@ -26,6 +26,7 @@ size_t strnlen (const char *s, size_t n);
 char *strchr (const char *s, int c);
 char *strrchr (const char *s, int c);
 long atol (const char *s);
+unsigned long strtoul (const char *str, char **endptr, int base);
 void writel (unsigned int value, void* address);
 uint32_t readl(volatile uint32_t *addr);
 
